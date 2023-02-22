@@ -2,7 +2,7 @@ FROM node:16 AS development
 ARG NODE_AUTH_TOKEN
 WORKDIR /app
 COPY . .
-RUN yarn install
+RUN yarn install --network-timeout 100000
 RUN yarn run build
 FROM node:16 AS production
 ARG NODE_AUTH_TOKEN
