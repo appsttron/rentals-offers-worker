@@ -3,12 +3,11 @@ import { RentalEntitiesDtoMapper } from './rental-entities.dto.mapper';
 import { RentalEntitiesMongoRepository } from './rental-entities.mongo.repository';
 import { rentalEntitiesProviders } from './rental-entities.provider';
 import { DatabaseModule } from '../db-config/database.module';
-import {Inject, Module, OnApplicationBootstrap} from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import {ClientProxy} from "@nestjs/microservices";
-import {EnvironmentConfigModule} from "../environment-config/environment-config.module";
-import {RentalEntitiesQueueController} from "./rental-entities.queue.controller";
-import {rentalEntitiesMailProvider} from "./rental-entities.mail.provider";
+import { EnvironmentConfigModule } from '../environment-config/environment-config.module';
+import { RentalEntitiesQueueController } from './rental-entities.queue.controller';
+import { rentalEntitiesMailProvider } from './rental-entities.mail.provider';
 
 @Module({
   imports: [DatabaseModule, HttpModule, EnvironmentConfigModule],
