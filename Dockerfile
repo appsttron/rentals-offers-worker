@@ -9,6 +9,6 @@ ARG NODE_AUTH_TOKEN
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json yarn.lock ./
-RUN yarn install --only=production --omit=dev
+RUN yarn install --only=production --omit=dev --network-timeout 100000
 COPY --from=development ./app/dist ./dist
 CMD [ "node", "dist/main"]
