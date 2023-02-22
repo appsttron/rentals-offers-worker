@@ -1,0 +1,59 @@
+name: Build & Deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+
+    name: "Deploy Service"
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ secrets.SSH_USERNAME }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+
+      - name: Checkout
+        run: |
+          ssh staging "
+          mkdir -p workspace
+          cd workspace
+          git clone git@github.com:appsttron/rentals-offers-worker.git
+          "
+      - name: Docker Deploy
+        run: |
+          ssh staging "
+          echo $NODE_AUTH_TOKEN
+          cd workspace/rentals-offers-worker
+          docker build . -t appsttron/rentals-offers-worker:prod --build-arg NODE_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          docker images
+          docker kill rentals-offers-worker
+          docker rm rentals-offers-worker
+          docker run --name rentals-offers-worker -e DATABASE_URL=${{ secrets.DATABASE_URL }} -e API_KEY=${{ secrets.API_KEY }} -e RMQ_QUEUE_NAME=rentals -e RMQ_URL=${{ secrets.RMQ_URL }} -e EMAIL=${{ secrets.EMAIL }} -e EMAIL_PASS=${{ secrets.EMAIL_PASS }} -e SERVICE_ENDPOINT=http://206.189.197.77:9070 -d -t appsttron/rentals-offers-worker:prod
+          "
+
+      - name: Clean up
+        if: always()
+        run: |
+          ssh staging "
+          ls
+          rm -r workspace/rentals-offers-worker
+          "
